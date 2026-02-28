@@ -21,8 +21,17 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     }
 
     return {
-        title: `${connector.name} for Looker Studio | Primenym`,
-        description: `Connect ${connector.name} to Looker Studio with Primenym. Visualize ${connector.features.join(", ")} instantly.`,
+        title: `${connector.name} Connector for Google Looker Studio | Primenym`,
+        description: `Connect your ${connector.name} account data directly to Google Looker Studio with Primenym. Easily visualize ${connector.features.slice(0, 3).join(", ")} and automate your business reporting without any code.`,
+        keywords: [
+            `${connector.name} Looker Studio`,
+            `${connector.name} dashboard`,
+            `${connector.name} analytics`,
+            `${connector.name} data integration`,
+            "Google Data Studio",
+            "automated reporting",
+            ...connector.tags
+        ]
     }
 }
 

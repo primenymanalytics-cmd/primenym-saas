@@ -32,10 +32,10 @@ export default function ProductsPage() {
         <div className="container mx-auto px-4 md:px-6 py-10">
             <div className="flex flex-col items-center text-center space-y-4 mb-12">
                 <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
-                    Connector Marketplace
+                    Premium Data Connectors for Looker Studio
                 </h1>
-                <p className="max-w-[700px] text-muted-foreground md:text-xl/relaxed">
-                    Find the perfect connector for your Looker Studio reports.
+                <p className="max-w-[800px] text-muted-foreground md:text-xl/relaxed">
+                    Automate your marketing and e-commerce reporting instantly. Browse our marketplace of high-performance, enterprise-grade connectors to visualize your Shopify, Facebook Ads, and WooCommerce data in Google Looker Studio without writing any code.
                 </p>
 
                 <div className="relative w-full max-w-lg mt-6">
