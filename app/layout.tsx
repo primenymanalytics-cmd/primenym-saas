@@ -4,6 +4,7 @@ import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { cn } from "@/lib/utils";
+import Script from "next/script";
 
 import { AuthProvider } from "@/lib/auth-context";
 
@@ -21,6 +22,22 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {/* Google Analytics */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-NYWG9R5XJB"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'G-NYWG9R5XJB');
+          `}
+        </Script>
+      </head>
       <body className={cn(inter.className, "min-h-screen flex flex-col bg-background font-sans antialiased")}>
         <AuthProvider>
           <Navbar />
