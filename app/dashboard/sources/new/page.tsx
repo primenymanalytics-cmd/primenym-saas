@@ -28,22 +28,35 @@ export default function NewSourcePage() {
 
         setError("");
 
-        if (connectorId === "shopify") {
-            // Reveal the input field for shopify domain
-            if (selectedConnector !== "shopify") {
-                setSelectedConnector("shopify")
+        if (connectorId === "shopify" || connectorId === "woocommerce") {
+            // Reveal the input field for store domain
+            if (selectedConnector !== connectorId) {
+                setSelectedConnector(connectorId)
                 return;
             }
 
-            // If already selected, they clicked "Proceed to Shopify"
-            if (!shopUrl || !shopUrl.includes(".myshopify.com")) {
-                setError("Please enter a valid Shopify domain (e.g., store.myshopify.com).")
+            // If already selected, they clicked "Proceed"
+            if (!shopUrl) {
+                setError(`Please enter a valid ${connectorName} store URL.`)
                 return;
             }
 
-            // Redirect to our Next.js backend endpoint which redirects them to Shopify
-            const authUrl = `/api/connect/shopify/authorize?shop=${encodeURIComponent(shopUrl)}&uid=${user.uid}`;
-            window.location.href = authUrl;
+            if (connectorId === "shopify") {
+                if (!shopUrl.includes(".myshopify.com")) {
+                    setError("Please enter a valid Shopify domain (e.g., store.myshopify.com).")
+                    return;
+                }
+                const authUrl = `/api/connect/shopify/authorize?shop=${encodeURIComponent(shopUrl)}&uid=${user.uid}`;
+                window.location.href = authUrl;
+            } else if (connectorId === "woocommerce") {
+                if (!shopUrl.startsWith("http")) {
+                    setError("Please include https:// in your WordPress URL.")
+                    return;
+                }
+                const authUrl = `/api/connect/woocommerce/authorize?url=${encodeURIComponent(shopUrl)}&uid=${user.uid}`;
+                window.location.href = authUrl;
+            }
+
         } else {
             // Other connectors fallback logic or future implementation
             setError(`${connectorName} OAuth flow is not implemented yet.`)
@@ -87,18 +100,20 @@ export default function NewSourcePage() {
                             </div>
                         </CardHeader>
 
-                        {selectedConnector === connector.id && connector.id === "shopify" && (
+                        {(selectedConnector === connector.id && (connector.id === "shopify" || connector.id === "woocommerce")) && (
                             <CardContent className="bg-indigo-50/50 dark:bg-indigo-950/20 pt-4 pb-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="shopUrl" className="text-xs font-semibold text-indigo-900 dark:text-indigo-300">Shopify Store Domain</Label>
+                                    <Label htmlFor="shopUrl" className="text-xs font-semibold text-indigo-900 dark:text-indigo-300">
+                                        {connector.id === "shopify" ? "Shopify Store Domain" : "WordPress Store URL"}
+                                    </Label>
                                     <Input
                                         id="shopUrl"
-                                        placeholder="e.g. my-store.myshopify.com"
+                                        placeholder={connector.id === "shopify" ? "e.g. my-store.myshopify.com" : "e.g. https://my-store.com"}
                                         value={shopUrl}
                                         onChange={(e) => setShopUrl(e.target.value)}
                                         className="h-9 text-sm border-indigo-200 dark:border-indigo-800 focus-visible:ring-indigo-500"
                                     />
-                                    <p className="text-[10px] text-muted-foreground">Required to identify your Shopify instance.</p>
+                                    <p className="text-[10px] text-muted-foreground">Required to identify your {connector.name} instance.</p>
                                 </div>
                             </CardContent>
                         )}
