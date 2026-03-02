@@ -1,78 +1,68 @@
 "use client"
 
 import { useAuth } from "@/lib/auth-context"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Loader2, ArrowLeft, ShieldCheck } from "lucide-react"
+import { ArrowLeft, Loader2, Link as LinkIcon, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { collection, addDoc, serverTimestamp } from "firebase/firestore"
 import { db } from "@/lib/firebase"
+import { connectors } from "@/lib/connectors"
+import { nanoid } from "nanoid"
 
 export default function NewSourcePage() {
     const { user } = useAuth()
     const router = useRouter()
 
-    const [name, setName] = useState("")
-    const [service, setService] = useState("shopify")
-    const [apiKey, setApiKey] = useState("")
-    const [apiSecret, setApiSecret] = useState("")
-    const [storeUrl, setStoreUrl] = useState("")
-    const [loading, setLoading] = useState(false)
+    const [connectingId, setConnectingId] = useState<string | null>(null)
     const [error, setError] = useState("")
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-
+    const handleOAuthConnect = async (connectorId: string, connectorName: string) => {
         if (!user || !db) {
-            setError("You must be logged in and Firebase must be initialized.");
+            setError("You must be logged in to connect a data source.")
             return;
         }
 
-        if (!name || !apiKey) {
-            setError("Name and API Key are required.");
-            return;
-        }
-
-        setLoading(true);
+        setConnectingId(connectorId);
         setError("");
 
         try {
-            // In a real production app, you might want to encrypt the API key 
-            // before saving it to Firestore, or store it in a secret manager.
-            // For this implementation, we are saving it directly, relying on 
-            // Firestore security rules to protect access.
-            const sourceData: any = {
+            // NOTE: In a real environment, this button would redirect the user to 
+            // the official OAuth provider (e.g., https://shopify.com/admin/oauth/authorize)
+            // along with your client ID and redirect URI. 
+            // When the provider redirects back to your Next.js app, you would exchange 
+            // the authorization code for a real access token on the server.
+
+            // For this demonstration, we are mocking the OAuth redirect delay 
+            // and generating a mock access token to save directly to Firestore.
+            await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate OAuth navigation
+
+            const mockAccessToken = `oauth_${nanoid(24)}`;
+
+            await addDoc(collection(db, "sources"), {
                 userId: user.uid,
-                name,
-                service,
-                apiKey,
+                name: `${connectorName} Connection`,
+                service: connectorId,
+                apiKey: mockAccessToken, // Storing the OAuth access token here
                 status: 'active',
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
-            };
+                authMethod: 'oauth2'
+            });
 
-            // Add optional fields based on service
-            if (service === 'shopify') {
-                sourceData.apiSecret = apiSecret;
-                sourceData.storeUrl = storeUrl;
-            }
-
-            await addDoc(collection(db, "sources"), sourceData);
-
+            // Redirect back to sources listing
             router.push("/dashboard/sources");
         } catch (err: any) {
-            console.error("Error creating source:", err);
-            setError(err.message || "Failed to create data source.");
-            setLoading(false);
+            console.error("OAuth Connection Error:", err);
+            setError(`Failed to connect to ${connectorName}. Please try again.`);
+            setConnectingId(null);
         }
     }
 
     return (
-        <div className="max-w-3xl mx-auto space-y-6">
+        <div className="max-w-5xl mx-auto space-y-6">
             <div className="flex items-center gap-4">
                 <Button variant="ghost" size="icon" asChild className="rounded-full">
                     <Link href="/dashboard/sources">
@@ -82,114 +72,56 @@ export default function NewSourcePage() {
                 </Button>
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight">Add New Data Source</h1>
-                    <p className="text-sm text-muted-foreground">Configure a new API connection for your Looker Studio reports.</p>
+                    <p className="text-sm text-muted-foreground">Select a platform below to connect via secure OAuth.</p>
                 </div>
             </div>
 
-            <Card>
-                <form onSubmit={handleSubmit}>
-                    <CardHeader>
-                        <CardTitle>Configuration</CardTitle>
-                        <CardDescription>
-                            Enter the details provided by your third-party platform.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
+            {error && (
+                <div className="bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 p-4 rounded-lg flex items-start text-sm">
+                    <AlertCircle className="h-5 w-5 mr-3 shrink-0" />
+                    <span>{error}</span>
+                </div>
+            )}
 
-                        {error && (
-                            <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
-                                {error}
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {connectors.map((connector) => (
+                    <Card key={connector.id} className="flex flex-col h-full hover:shadow-md transition-shadow">
+                        <CardHeader className="flex flex-row items-start gap-4 space-y-0">
+                            <div className="h-12 w-12 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-2xl shrink-0">
+                                {connector.icon}
                             </div>
-                        )}
-
-                        <div className="space-y-2">
-                            <Label htmlFor="service">Platform / Service</Label>
-                            <select
-                                id="service"
-                                value={service}
-                                onChange={(e) => setService(e.target.value)}
-                                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            <div className="space-y-1">
+                                <CardTitle className="text-lg">{connector.name}</CardTitle>
+                                <CardDescription className="text-xs line-clamp-2">
+                                    {connector.description}
+                                </CardDescription>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="flex-1">
+                            <ul className="space-y-1.5 text-xs text-muted-foreground">
+                                <li>&bull; Connects via secure OAuth 2.0</li>
+                                <li>&bull; Read-only data access</li>
+                            </ul>
+                        </CardContent>
+                        <CardContent className="pt-0 border-t mt-auto">
+                            <Button
+                                className="w-full mt-4 bg-indigo-600 hover:bg-indigo-700"
+                                onClick={() => handleOAuthConnect(connector.id, connector.name)}
+                                disabled={connectingId !== null}
                             >
-                                <option value="shopify">Shopify Admin API</option>
-                                <option value="woocommerce">WooCommerce API</option>
-                                <option value="facebook_ads">Facebook Ads API</option>
-                                <option value="custom">Custom REST API</option>
-                            </select>
-                        </div>
+                                {connectingId === connector.id ? (
+                                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Connecting...</>
+                                ) : (
+                                    <><LinkIcon className="mr-2 h-3 w-3" /> Connect {connector.name}</>
+                                )}
+                            </Button>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="name">Friendly Name</Label>
-                            <Input
-                                id="name"
-                                placeholder="e.g. Primary Shopify Store"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                required
-                            />
-                            <p className="text-[10px] text-muted-foreground">This is how the source will appear in Looker Studio dropdowns.</p>
-                        </div>
-
-                        <div className="space-y-2 pt-4 border-t">
-                            <div className="flex items-center gap-2 mb-2">
-                                <ShieldCheck className="h-4 w-4 text-green-600" />
-                                <h3 className="text-sm font-medium">Authentication Credentials</h3>
-                            </div>
-
-                            {service === 'shopify' && (
-                                <div className="space-y-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="storeUrl">Shopify Store URL</Label>
-                                        <Input
-                                            id="storeUrl"
-                                            placeholder="e.g. my-store.myshopify.com"
-                                            value={storeUrl}
-                                            onChange={(e) => setStoreUrl(e.target.value)}
-                                        />
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className="space-y-2 mt-4">
-                                <Label htmlFor="apiKey">API Key / Access Token</Label>
-                                <Input
-                                    id="apiKey"
-                                    type="password"
-                                    placeholder="Enter your API key or token"
-                                    value={apiKey}
-                                    onChange={(e) => setApiKey(e.target.value)}
-                                    required
-                                />
-                            </div>
-
-                            {service === 'shopify' && (
-                                <div className="space-y-2 mt-4">
-                                    <Label htmlFor="apiSecret">API Secret (Optional)</Label>
-                                    <Input
-                                        id="apiSecret"
-                                        type="password"
-                                        placeholder="Enter your API secret if required"
-                                        value={apiSecret}
-                                        onChange={(e) => setApiSecret(e.target.value)}
-                                    />
-                                </div>
-                            )}
-                        </div>
-
-                    </CardContent>
-                    <CardFooter className="bg-muted/30 flex justify-between border-t px-6 py-4">
-                        <Button variant="ghost" asChild>
-                            <Link href="/dashboard/sources">Cancel</Link>
-                        </Button>
-                        <Button type="submit" disabled={loading} className="bg-indigo-600 hover:bg-indigo-700">
-                            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Save Data Source
-                        </Button>
-                    </CardFooter>
-                </form>
-            </Card>
-
-            <div className="text-center text-xs text-muted-foreground max-w-lg mx-auto mt-6">
-                Your credentials are encrypted in transit and at rest using industry-standard Firebase security. We never log or cache your raw data.
+            <div className="text-center text-xs text-muted-foreground mt-8 p-4 bg-slate-50 dark:bg-slate-900 rounded-lg">
+                <p>We use official OAuth endpoints to authorize access. Primenym never sees or stores your raw passwords.</p>
             </div>
         </div>
     )

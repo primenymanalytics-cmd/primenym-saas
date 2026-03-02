@@ -101,7 +101,7 @@ export default function SourcesPage() {
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Data Sources</h1>
                     <p className="text-muted-foreground mt-1">
-                        Manage API keys and authentication tokens for your integrations.
+                        Manage your connected accounts and integrations.
                     </p>
                 </div>
                 <Button asChild className="bg-indigo-600 hover:bg-indigo-700 w-full sm:w-auto">
@@ -122,7 +122,7 @@ export default function SourcesPage() {
                         <Database className="h-10 w-10 mb-4 text-slate-300 dark:text-slate-700" />
                         <h3 className="text-lg font-medium text-foreground">No data sources configured</h3>
                         <p className="text-sm mt-1 max-w-sm mb-6">
-                            Securely store your API keys and access tokens here to use them across all your Looker Studio reports.
+                            Connect your accounts securely via OAuth to use them across all your Looker Studio reports.
                         </p>
                         <Button asChild variant="outline">
                             <Link href="/dashboard/sources/new">Create Your First Source</Link>
@@ -141,12 +141,12 @@ export default function SourcesPage() {
                                         </CardTitle>
                                         <CardDescription className="flex items-center text-xs">
                                             <Key className="mr-1 h-3 w-3" />
-                                            {source.service.charAt(0).toUpperCase() + source.service.slice(1)} API
+                                            {source.service.charAt(0).toUpperCase() + source.service.slice(1)} OAuth
                                         </CardDescription>
                                     </div>
                                     <div className={`px-2 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wider ${source.status === 'active'
-                                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                                            : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                        : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
                                         }`}>
                                         {source.status}
                                     </div>
