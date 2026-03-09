@@ -78,7 +78,8 @@ function AuthorizeContent() {
 
             if (!res.ok) {
                 const data = await res.json();
-                throw new Error(data.error || 'Failed to authorize');
+                const errorMessage = data.details ? `${data.error}: ${data.details}` : (data.error || 'Failed to authorize');
+                throw new Error(errorMessage);
             }
 
             const data = await res.json();
