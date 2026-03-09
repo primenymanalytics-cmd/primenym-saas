@@ -1,0 +1,28 @@
+{
+  "timeZone": "GMT",
+  "dependencies": {
+    "libraries": [
+      {
+        "userSymbol": "OAuth2",
+        "libraryId": "1B7FSrk5Zi6L1rSxxTDgDEUsPzlukDsi4KGuTMorsTQHhGBzBkMun4iDF",
+        "version": "43"
+      }
+    ]
+  },
+  "exceptionLogging": "STACKDRIVER",
+  "dataStudio": {
+    "name": "Primenym Shopify Connector",
+    "company": "Primenym",
+    "companyUrl": "https://primenym.com",
+    "addonUrl": "https://primenym.com",
+    "supportUrl": "https://primenym.com/support",
+    "description": "Visualize your Shopify store data directly in Looker Studio.",
+    "logoUrl": "https://primenym.com/logo.png",
+    "authType": [
+      "OAUTH2"
+    ],
+    "feeType": [
+      "PAID"
+    ]
+  }
+}
