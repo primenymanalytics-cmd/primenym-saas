@@ -18,11 +18,8 @@ export async function GET(req: Request) {
 
     const clientId = process.env.NEXT_PUBLIC_SHOPIFY_CLIENT_ID;
 
-    // In production, this should be your actual live URL, e.g., https://primenym.com/api/connect/shopify/callback
-    // For local dev, checking the host helps
-    const host = req.headers.get('host') || 'localhost:3000';
-    const protocol = host.includes('localhost') ? 'http' : 'https';
-    const redirectUri = `${protocol}://${host}/api/connect/shopify/callback`;
+    const { origin } = new URL(req.url);
+    const redirectUri = `${origin}/api/connect/shopify/callback`;
 
     if (!clientId) {
         console.error("Missing NEXT_PUBLIC_SHOPIFY_CLIENT_ID environment variable.");

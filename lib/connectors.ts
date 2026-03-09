@@ -23,6 +23,17 @@ export const connectors: Connector[] = [
         dimensions: ["Date", "Product Name", "SKU", "Customer City", "Traffic Source"]
     },
     {
+        id: "linkedin-ads",
+        name: "LinkedIn Ads",
+        description: "B2B marketing insights. Track campaign performance, demographics, and ROI.",
+        tags: ["Marketing", "Ads", "B2B"],
+        price: "$19/mo",
+        features: ["Campaign Performance", "Audience Demographics", "Lead Generation"],
+        icon: "💼",
+        metrics: ["Spend", "Impressions", "Clicks", "Conversions", "Cost per Lead", "Engagement Rate"],
+        dimensions: ["Date", "Campaign GroupName", "Campaign Name", "Ad Form", "Job Title", "Company Size"]
+    },
+    {
         id: "woocommerce",
         name: "WooCommerce Connector",
         description: "Complete reporting for your WooCommerce store. Track revenue, taxes, and shipping.",

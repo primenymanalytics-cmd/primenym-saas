@@ -28,7 +28,10 @@ export default function NewSourcePage() {
 
         setError("");
 
-        if (connectorId === "shopify" || connectorId === "woocommerce") {
+        if (connectorId === "linkedin-ads") {
+            const authUrl = `/api/connect/linkedin/authorize?userId=${user.uid}`;
+            window.location.href = authUrl;
+        } else if (connectorId === "shopify" || connectorId === "woocommerce") {
             // Reveal the input field for store domain
             if (selectedConnector !== connectorId) {
                 setSelectedConnector(connectorId)

@@ -65,10 +65,8 @@ export async function GET(req: Request) {
         });
 
         // Redirect back to the dashboard indicating success
-        // In local development, the port might be 3000
-        const host = req.headers.get('host') || 'localhost:3000';
-        const protocol = host.includes('localhost') ? 'http' : 'https';
-        return NextResponse.redirect(`${protocol}://${host}/dashboard/sources?success=connected`);
+        const { origin } = new URL(req.url);
+        return NextResponse.redirect(`${origin}/dashboard/sources?success=connected`);
 
     } catch (error) {
         console.error('Shopify Callback Error:', error);

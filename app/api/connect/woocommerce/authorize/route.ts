@@ -17,12 +17,10 @@ export async function GET(req: Request) {
     // Remove trailing slash if present
     shopUrl = shopUrl.replace(/\/$/, '');
 
-    // Host detection for callback
-    const host = req.headers.get('host') || 'localhost:3000';
-    const protocol = host.includes('localhost') ? 'http' : 'https';
+    const { origin } = new URL(req.url);
 
-    const returnUrl = `${protocol}://${host}/dashboard/sources?success=connected&provider=woocommerce`;
-    const callbackUrl = `${protocol}://${host}/api/connect/woocommerce/callback`;
+    const returnUrl = `${origin}/dashboard/sources?success=connected&provider=woocommerce`;
+    const callbackUrl = `${origin}/api/connect/woocommerce/callback`;
 
     // Construct WooCommerce Auth URL
     const appName = "Primenym Looker Connectors";
