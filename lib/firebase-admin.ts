@@ -1,5 +1,7 @@
 import * as admin from 'firebase-admin';
 
+let initError: any = null;
+
 // Initialize Firebase Admin
 if (!admin.apps.length) {
     try {
@@ -13,6 +15,7 @@ if (!admin.apps.length) {
         });
     } catch (error) {
         console.error('Firebase Admin initialization error', error);
+        initError = error;
     }
 }
 
@@ -20,4 +23,4 @@ if (!admin.apps.length) {
 const dbAdmin = admin.apps.length ? admin.firestore() : null;
 const authAdmin = admin.apps.length ? admin.auth() : null;
 
-export { dbAdmin, authAdmin };
+export { dbAdmin, authAdmin, initError };

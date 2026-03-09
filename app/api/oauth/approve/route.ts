@@ -1,11 +1,14 @@
 import { NextResponse } from 'next/server';
-import { dbAdmin, authAdmin } from '@/lib/firebase-admin';
+import { dbAdmin, authAdmin, initError } from '@/lib/firebase-admin';
 import * as admin from 'firebase-admin';
 import { nanoid } from 'nanoid';
 
 export async function POST(req: Request) {
     if (!dbAdmin || !authAdmin) {
-        return NextResponse.json({ error: 'Server misconfiguration: Firebase Admin not initialized' }, { status: 500 });
+        return NextResponse.json({
+            error: 'Server misconfiguration: Firebase Admin not initialized',
+            details: initError ? initError.toString() : 'Unknown initialization error'
+        }, { status: 500 });
     }
 
     try {
