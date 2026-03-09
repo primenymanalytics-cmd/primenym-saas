@@ -3,6 +3,7 @@ var OAUTH_CLIENT_ID = 'looker_studio_client';
 var OAUTH_CLIENT_SECRET = 'looker_studio_secret'; // In a real app, this should be handled securely
 
 function getAuthType() {
+    var cc = DataStudioApp.createCommunityConnector();
     var AuthTypes = cc.AuthType;
     return cc.newAuthTypeResponse()
         .setAuthType(AuthTypes.OAUTH2)

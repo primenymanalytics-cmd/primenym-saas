@@ -10,6 +10,9 @@
     ]
   },
   "exceptionLogging": "STACKDRIVER",
+  "oauthScopes": [
+    "https://www.googleapis.com/auth/script.external_request"
+  ],
   "dataStudio": {
     "name": "Primenym Shopify Connector",
     "company": "Primenym",
@@ -17,12 +20,6 @@
     "addonUrl": "https://primenym.com",
     "supportUrl": "https://primenym.com/support",
     "description": "Visualize your Shopify store data directly in Looker Studio.",
-    "logoUrl": "https://primenym.com/logo.png",
-    "authType": [
-      "OAUTH2"
-    ],
-    "feeType": [
-      "PAID"
-    ]
+    "logoUrl": "https://primenym.com/favicon.ico"
   }
 }
