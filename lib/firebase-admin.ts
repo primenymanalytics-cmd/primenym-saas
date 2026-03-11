@@ -2,6 +2,14 @@ import * as admin from 'firebase-admin';
 
 let initError: any = null;
 
+let parsedKey = process.env.FIREBASE_PRIVATE_KEY;
+if (parsedKey) {
+    // Remove accidentally included surrounding double or single quotes
+    parsedKey = parsedKey.replace(/^"|"$/g, '').replace(/^'|'$/g, '');
+    // Ensure escaped newlines are converted to actual newlines
+    parsedKey = parsedKey.replace(/\\n/g, '\n');
+}
+
 // Initialize Firebase Admin
 if (!admin.apps.length) {
     try {
@@ -9,8 +17,7 @@ if (!admin.apps.length) {
             credential: admin.credential.cert({
                 projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
                 clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-                // Handle newlines in the private key string
-                privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+                privateKey: parsedKey,
             }),
         });
     } catch (error) {
