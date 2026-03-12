@@ -7,8 +7,6 @@ export async function GET(req: Request) {
     const state = searchParams.get('state') || '';
     const scope = searchParams.get('scope') || '';
 
-    // Serve a self-contained HTML page for authorization
-    // This avoids redirects and works inside the Looker Studio popup
     const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -40,9 +38,14 @@ export async function GET(req: Request) {
         .btn-primary:disabled { background: #a5b4fc; cursor: not-allowed; }
         .btn-ghost { background: transparent; color: #94a3b8; }
         .btn-ghost:hover { background: #f1f5f9; }
-        .login-section { display: none; }
-        .login-section .btn-google { background: white; border: 1px solid #e2e8f0; color: #1e293b; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .login-section .btn-google:hover { background: #f8fafc; }
+        .btn-google { background: white; border: 1px solid #e2e8f0; color: #1e293b; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-google:hover { background: #f8fafc; }
+        input { width: 100%; padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; margin-bottom: 10px; outline: none; }
+        input:focus { border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
+        .divider { display: flex; align-items: center; margin: 14px 0; color: #94a3b8; font-size: 12px; }
+        .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #e2e8f0; }
+        .divider::before { margin-right: 12px; }
+        .divider::after { margin-left: 12px; }
         .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 8px; vertical-align: middle; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .footer { font-size: 11px; color: #94a3b8; margin-top: 20px; }
@@ -51,27 +54,33 @@ export async function GET(req: Request) {
 <body>
     <div class="card">
         <div class="logo">Primenym</div>
-        
+
         <!-- Loading State -->
         <div id="loading">
             <p style="color: #64748b; font-size: 14px;">Loading...</p>
         </div>
 
-        <!-- Login Section (shown when not authenticated) -->
-        <div id="login-section" class="login-section">
+        <!-- Login Section -->
+        <div id="login-section" style="display:none;">
             <div class="shield">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" /></svg>
             </div>
             <h2>Sign In Required</h2>
             <p class="desc">Sign in to your <strong>Primenym</strong> account to authorize Looker Studio.</p>
             <div id="login-error" class="error"></div>
+            <form onsubmit="signInWithEmail(event)">
+                <input type="email" id="email" placeholder="Email address" required />
+                <input type="password" id="password" placeholder="Password" required />
+                <button type="submit" class="btn btn-primary" id="email-btn">Sign In</button>
+            </form>
+            <div class="divider">or</div>
             <button class="btn btn-google" onclick="signInWithGoogle()">
                 <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18Z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.997 8.997 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332Z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 2.58 9 2.58Z"/></svg>
                 Sign in with Google
             </button>
         </div>
 
-        <!-- Authorize Section (shown when authenticated) -->
+        <!-- Authorize Section -->
         <div id="authorize-section" style="display:none;">
             <div class="shield">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" /></svg>
@@ -99,7 +108,6 @@ export async function GET(req: Request) {
         var REDIRECT_URI = ${JSON.stringify(redirectUri)};
         var STATE = ${JSON.stringify(state)};
 
-        // Initialize Firebase
         firebase.initializeApp({
             apiKey: "${process.env.NEXT_PUBLIC_FIREBASE_API_KEY}",
             authDomain: "${process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}",
@@ -121,12 +129,28 @@ export async function GET(req: Request) {
             }
         });
 
-        function signInWithGoogle() {
-            var provider = new firebase.auth.GoogleAuthProvider();
-            firebase.auth().signInWithPopup(provider).catch(function(error) {
+        function signInWithEmail(e) {
+            e.preventDefault();
+            var email = document.getElementById('email').value;
+            var password = document.getElementById('password').value;
+            var btn = document.getElementById('email-btn');
+            btn.disabled = true;
+            btn.textContent = 'Signing in...';
+            document.getElementById('login-error').style.display = 'none';
+
+            firebase.auth().signInWithEmailAndPassword(email, password).catch(function(error) {
                 document.getElementById('login-error').style.display = 'block';
                 document.getElementById('login-error').textContent = error.message;
+                btn.disabled = false;
+                btn.textContent = 'Sign In';
             });
+        }
+
+        function signInWithGoogle() {
+            var provider = new firebase.auth.GoogleAuthProvider();
+            // Use signInWithRedirect instead of signInWithPopup
+            // signInWithPopup fails inside Looker Studio's popup window
+            firebase.auth().signInWithRedirect(provider);
         }
 
         function handleApprove() {
