@@ -124,8 +124,20 @@ export async function GET(req: Request) {
                 document.getElementById('login-section').style.display = 'none';
                 document.getElementById('user-email').textContent = user.email;
             } else {
-                document.getElementById('login-section').style.display = 'block';
-                document.getElementById('authorize-section').style.display = 'none';
+                // Check if we are returning from a signInWithRedirect
+                firebase.auth().getRedirectResult().then(function(result) {
+                    if (result && result.user) {
+                        // onAuthStateChanged will fire and handle the UI
+                    } else {
+                        document.getElementById('login-section').style.display = 'block';
+                        document.getElementById('authorize-section').style.display = 'none';
+                    }
+                }).catch(function(err) {
+                    document.getElementById('login-section').style.display = 'block';
+                    document.getElementById('authorize-section').style.display = 'none';
+                    document.getElementById('login-error').style.display = 'block';
+                    document.getElementById('login-error').textContent = err.message;
+                });
             }
         });
 
@@ -148,9 +160,15 @@ export async function GET(req: Request) {
 
         function signInWithGoogle() {
             var provider = new firebase.auth.GoogleAuthProvider();
-            // Use signInWithRedirect instead of signInWithPopup
-            // signInWithPopup fails inside Looker Studio's popup window
-            firebase.auth().signInWithRedirect(provider);
+            firebase.auth().signInWithPopup(provider).catch(function(error) {
+                // If popup blocked, fall back to redirect
+                if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user') {
+                    firebase.auth().signInWithRedirect(provider);
+                } else {
+                    document.getElementById('login-error').style.display = 'block';
+                    document.getElementById('login-error').textContent = error.message;
+                }
+            });
         }
 
         function handleApprove() {
