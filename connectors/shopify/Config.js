@@ -3,7 +3,7 @@ function getConfig(request) {
     var config = cc.getConfig();
 
     // Fetch configured stores from Primenym API using OAuth token
-    var response = UrlFetchApp.fetch('https://primenym.com/api/connector/config?connector=shopify', {
+    var response = UrlFetchApp.fetch('https://www.primenym.com/api/connector/config?connector=shopify', {
         headers: {
             Authorization: 'Bearer ' + getOAuthService().getAccessToken()
         }

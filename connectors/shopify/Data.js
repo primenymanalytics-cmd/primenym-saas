@@ -8,7 +8,7 @@ function getData(request) {
     );
 
     // Example: requesting data from Primenym backend
-    var url = 'https://primenym.com/api/connector/shopify/data?storeId=' + storeId;
+    var url = 'https://www.primenym.com/api/connector/shopify/data?storeId=' + storeId;
 
     if (request.dateRange) {
         url += '&startDate=' + request.dateRange.startDate + '&endDate=' + request.dateRange.endDate;

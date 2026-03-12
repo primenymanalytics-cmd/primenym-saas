@@ -1,4 +1,4 @@
-var PRIMENYM_API_URL = 'https://primenym.com/api'; // Replace with the actual deployed URL
+var PRIMENYM_API_URL = 'https://www.primenym.com/api';
 var OAUTH_CLIENT_ID = 'looker_studio_client';
 var OAUTH_CLIENT_SECRET = 'looker_studio_secret'; // In a real app, this should be handled securely
 
