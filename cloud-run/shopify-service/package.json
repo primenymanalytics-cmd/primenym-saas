@@ -1,0 +1,12 @@
+{
+  "name": "shopify-data-service",
+  "version": "1.0.0",
+  "description": "Cloud Run service for heavy Shopify data fetching",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
