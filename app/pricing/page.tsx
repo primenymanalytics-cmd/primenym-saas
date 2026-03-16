@@ -1,149 +1,171 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Check, X } from "lucide-react"
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
+import { Check, Minus, Plus, Zap, Shield, BarChart3, Headphones, Cloud, Globe } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
 
 export default function PricingPage() {
     const [isYearly, setIsYearly] = useState(false)
+    const [seats, setSeats] = useState(1)
 
-    const plans = [
-        {
-            name: "Starter",
-            description: "Perfect for individuals and small projects.",
-            price: isYearly ? "$99" : "$19",
-            duration: isYearly ? "/year" : "/month",
-            features: [
-                "1 Active Connector",
-                "Up to 3 Data Sources",
-                "Standard Support",
-                "Daily Data Refreshes",
-            ],
-            notIncluded: [
-                "Premium Connectors",
-                "Custom API Integrations",
-                "Priority Support",
-            ],
-            buttonText: "Get Started",
-            href: "/signup",
-            popular: false
-        },
-        {
-            name: "Pro",
-            description: "Ideal for agencies and growing businesses.",
-            price: isYearly ? "$299" : "$49",
-            duration: isYearly ? "/year" : "/month",
-            features: [
-                "5 Active Connectors",
-                "Unlimited Data Sources",
-                "Priority Email Support",
-                "Hourly Data Refreshes",
-                "Premium Connectors Access",
-            ],
-            notIncluded: [
-                "Custom API Integrations",
-                "White-labeling",
-            ],
-            buttonText: "Start Free Trial",
-            href: "/signup",
-            popular: true
-        },
-        {
-            name: "Enterprise",
-            description: "Advanced features for large organizations.",
-            price: "Custom",
-            duration: "",
-            features: [
-                "Unlimited Connectors",
-                "Unlimited Data Sources",
-                "24/7 Dedicated Support",
-                "Real-time Data Refreshes",
-                "Premium Connectors Access",
-                "Custom API Integrations",
-                "White-labeling",
-            ],
-            notIncluded: [],
-            buttonText: "Contact Sales",
-            href: "/contact",
-            popular: false
-        }
+    const monthlyPrice = 9.90
+    const yearlyPrice = 99.00
+    const monthlyEquivalent = (yearlyPrice / 12).toFixed(2)
+    const savingsPercent = Math.round((1 - yearlyPrice / (monthlyPrice * 12)) * 100)
+
+    const pricePerSeat = isYearly ? yearlyPrice : monthlyPrice
+    const totalPrice = (pricePerSeat * seats).toFixed(2)
+
+    const features = [
+        { icon: Globe, text: "All Connectors (Shopify, WooCommerce, LinkedIn & more)" },
+        { icon: BarChart3, text: "Unlimited Data Sources" },
+        { icon: Zap, text: "Hourly Data Refreshes" },
+        { icon: Cloud, text: "Cloud-Powered Data Processing" },
+        { icon: Shield, text: "Enterprise-Grade Security" },
+        { icon: Headphones, text: "Priority Support" },
     ]
 
     return (
-        <div className="py-20 px-4 md:px-8 max-w-7xl mx-auto">
-            <div className="text-center max-w-3xl mx-auto mb-16">
-                <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl mb-4">
-                    Simple, transparent pricing
-                </h1>
-                <p className="text-xl text-muted-foreground">
-                    Choose the plan that best fits your data pipeline needs.
-                </p>
-
-                <div className="flex items-center justify-center mt-8 gap-3">
-                    <span className={`text-sm ${!isYearly ? 'font-bold' : 'text-muted-foreground'}`}>Monthly</span>
-                    <button
-                        onClick={() => setIsYearly(!isYearly)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 ${isYearly ? 'bg-indigo-600' : 'bg-slate-300'}`}
-                    >
-                        <span className="sr-only">Toggle billing period</span>
-                        <span
-                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isYearly ? 'translate-x-6' : 'translate-x-1'}`}
-                        />
-                    </button>
-                    <span className={`text-sm flex items-center gap-1 ${isYearly ? 'font-bold' : 'text-muted-foreground'}`}>
-                        Yearly <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-400">Save 20%</span>
-                    </span>
+        <div className="py-20 px-4 md:px-8 max-w-4xl mx-auto">
+            {/* Header */}
+            <div className="text-center max-w-2xl mx-auto mb-12">
+                <div className="inline-flex items-center rounded-full border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/50 px-4 py-1.5 text-sm font-medium text-indigo-700 dark:text-indigo-300 mb-6">
+                    Simple pricing, no surprises
                 </div>
+                <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl mb-4 bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-900 dark:from-white dark:via-indigo-200 dark:to-white bg-clip-text text-transparent">
+                    One plan. Everything included.
+                </h1>
+                <p className="text-lg text-muted-foreground">
+                    Pay per seat. Get access to every connector, every feature, no limits.
+                </p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-8">
-                {plans.map((plan) => (
-                    <Card key={plan.name} className={`relative flex flex-col ${plan.popular ? 'border-indigo-600 shadow-xl md:scale-105 z-10' : 'border-border'}`}>
-                        {plan.popular && (
-                            <div className="absolute -top-4 left-0 right-0 mx-auto w-32 bg-indigo-600 text-white text-xs font-bold uppercase tracking-wider text-center py-1 rounded-full">
-                                Most Popular
-                            </div>
-                        )}
-                        <CardHeader>
-                            <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                            <CardDescription className="min-h-[40px]">{plan.description}</CardDescription>
-                            <div className="mt-4 flex items-baseline text-5xl font-extrabold">
-                                {plan.price}
-                                <span className="ml-1 text-xl font-medium text-muted-foreground">{plan.duration}</span>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="flex-1">
-                            <ul className="space-y-4">
-                                {plan.features.map((feature, i) => (
-                                    <li key={i} className="flex items-start">
-                                        <Check className="h-5 w-5 text-indigo-600 shrink-0 mr-3" />
-                                        <span className="text-sm">{feature}</span>
-                                    </li>
-                                ))}
-                                {plan.notIncluded.map((feature, i) => (
-                                    <li key={i} className="flex items-start opacity-50">
-                                        <X className="h-5 w-5 text-muted-foreground shrink-0 mr-3" />
-                                        <span className="text-sm text-muted-foreground">{feature}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        </CardContent>
-                        <CardFooter>
-                            <Button asChild className={`w-full ${plan.popular ? 'bg-indigo-600 hover:bg-indigo-700' : ''}`} variant={plan.popular ? 'default' : 'outline'}>
-                                <Link href={plan.href}>{plan.buttonText}</Link>
-                            </Button>
-                        </CardFooter>
-                    </Card>
-                ))}
+            {/* Billing Toggle */}
+            <div className="flex items-center justify-center mb-10 gap-4">
+                <span className={`text-sm font-medium transition-colors ${!isYearly ? 'text-foreground' : 'text-muted-foreground'}`}>
+                    Monthly
+                </span>
+                <button
+                    onClick={() => setIsYearly(!isYearly)}
+                    className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 ${isYearly ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-slate-600'}`}
+                    aria-label="Toggle billing period"
+                >
+                    <span
+                        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform ${isYearly ? 'translate-x-6' : 'translate-x-1'}`}
+                    />
+                </button>
+                <span className={`text-sm font-medium flex items-center gap-2 transition-colors ${isYearly ? 'text-foreground' : 'text-muted-foreground'}`}>
+                    Yearly
+                    <span className="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/40 px-2.5 py-0.5 text-xs font-semibold text-green-700 dark:text-green-400">
+                        Save {savingsPercent}%
+                    </span>
+                </span>
             </div>
 
+            {/* Pricing Card */}
+            <Card className="relative overflow-hidden border-indigo-200 dark:border-indigo-800 shadow-2xl shadow-indigo-500/10 max-w-xl mx-auto">
+                {/* Gradient accent */}
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500" />
+
+                <CardHeader className="text-center pt-10 pb-6">
+                    <p className="text-sm font-medium text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-4">
+                        Per seat
+                    </p>
+
+                    <div className="flex items-baseline justify-center gap-1">
+                        <span className="text-6xl font-extrabold tracking-tight">
+                            ${isYearly ? monthlyEquivalent : monthlyPrice.toFixed(2)}
+                        </span>
+                        <span className="text-xl text-muted-foreground font-medium">/mo</span>
+                    </div>
+
+                    {isYearly && (
+                        <p className="text-sm text-muted-foreground mt-2">
+                            Billed as <span className="font-semibold text-foreground">${yearlyPrice.toFixed(2)}</span>/seat/year
+                        </p>
+                    )}
+                </CardHeader>
+
+                <CardContent className="px-8 pb-4">
+                    {/* Seat Selector */}
+                    <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-900 border rounded-xl p-4 mb-8">
+                        <div>
+                            <p className="text-sm font-semibold">Number of seats</p>
+                            <p className="text-xs text-muted-foreground">Each seat = 1 user account</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => setSeats(Math.max(1, seats - 1))}
+                                className="w-8 h-8 rounded-lg border flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-30"
+                                disabled={seats <= 1}
+                                aria-label="Decrease seats"
+                            >
+                                <Minus className="w-4 h-4" />
+                            </button>
+                            <span className="text-xl font-bold w-8 text-center">{seats}</span>
+                            <button
+                                onClick={() => setSeats(seats + 1)}
+                                className="w-8 h-8 rounded-lg border flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                                aria-label="Increase seats"
+                            >
+                                <Plus className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Total */}
+                    <div className="flex items-center justify-between border-b pb-6 mb-6">
+                        <span className="text-sm text-muted-foreground">
+                            {seats} seat{seats > 1 ? 's' : ''} × ${isYearly ? monthlyEquivalent : monthlyPrice.toFixed(2)}/mo
+                        </span>
+                        <div className="text-right">
+                            <p className="text-2xl font-bold">${totalPrice}<span className="text-sm font-normal text-muted-foreground">/{isYearly ? 'yr' : 'mo'}</span></p>
+                        </div>
+                    </div>
+
+                    {/* Features */}
+                    <ul className="space-y-4">
+                        {features.map((feature, i) => (
+                            <li key={i} className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center shrink-0">
+                                    <feature.icon className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                                </div>
+                                <span className="text-sm">{feature.text}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </CardContent>
+
+                <CardFooter className="px-8 pb-10 pt-6">
+                    <Button
+                        asChild
+                        className="w-full h-12 text-base font-semibold bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/25 transition-all hover:shadow-xl hover:shadow-indigo-500/30"
+                    >
+                        <Link href="/signup">
+                            Get Started
+                        </Link>
+                    </Button>
+                </CardFooter>
+            </Card>
+
+            {/* Trust Section */}
+            <div className="mt-12 text-center">
+                <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
+                    <Shield className="w-4 h-4" />
+                    14-day free trial · No credit card required · Cancel anytime
+                </p>
+            </div>
+
+            {/* FAQ / Support */}
             <div className="mt-20 text-center">
-                <h3 className="text-xl font-bold mb-4">Have questions?</h3>
-                <p className="text-muted-foreground mb-6">Can't find the right plan? Our team can help determine the best fit for your business.</p>
-                <Button asChild variant="secondary">
-                    <Link href="/contact">Contact Support</Link>
+                <h3 className="text-xl font-bold mb-3">Need a custom plan?</h3>
+                <p className="text-muted-foreground mb-6">
+                    For teams larger than 50 seats or specific requirements, we offer custom pricing.
+                </p>
+                <Button asChild variant="outline">
+                    <Link href="/contact">Contact Sales</Link>
                 </Button>
             </div>
         </div>
