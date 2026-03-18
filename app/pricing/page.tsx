@@ -2,13 +2,51 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
-import { Check, Minus, Plus, Zap, Shield, BarChart3, Headphones, Cloud, Globe } from "lucide-react"
+import { Minus, Plus, Zap, Shield, BarChart3, Headphones, Cloud, Globe, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
+import { useAuth } from "@/lib/auth-context"
+import { useRouter } from "next/navigation"
 
 export default function PricingPage() {
+    const { user } = useAuth()
+    const router = useRouter()
     const [isYearly, setIsYearly] = useState(false)
     const [seats, setSeats] = useState(1)
+    const [isLoading, setIsLoading] = useState(false)
+
+    const handleSubscribe = async () => {
+        if (!user) {
+            router.push('/login?redirect=/pricing')
+            return
+        }
+
+        setIsLoading(true)
+        try {
+            const res = await fetch('/api/stripe/create-checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    billing: isYearly ? 'yearly' : 'monthly',
+                    seats,
+                    userId: user.uid,
+                    userEmail: user.email,
+                })
+            })
+
+            const data = await res.json()
+            if (data.url) {
+                window.location.href = data.url
+            } else {
+                alert(data.error || 'Failed to create checkout session')
+            }
+        } catch (err) {
+            console.error('Checkout error:', err)
+            alert('Something went wrong. Please try again.')
+        } finally {
+            setIsLoading(false)
+        }
+    }
 
     const monthlyPrice = 9.90
     const yearlyPrice = 99.00
@@ -140,12 +178,15 @@ export default function PricingPage() {
 
                 <CardFooter className="px-8 pb-10 pt-6">
                     <Button
-                        asChild
+                        onClick={handleSubscribe}
+                        disabled={isLoading}
                         className="w-full h-12 text-base font-semibold bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/25 transition-all hover:shadow-xl hover:shadow-indigo-500/30"
                     >
-                        <Link href="/signup">
-                            Get Started
-                        </Link>
+                        {isLoading ? (
+                            <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Redirecting to checkout...</>
+                        ) : (
+                            'Subscribe Now'
+                        )}
                     </Button>
                 </CardFooter>
             </Card>
