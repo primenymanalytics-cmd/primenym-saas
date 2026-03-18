@@ -31,7 +31,27 @@ export async function GET(req: Request) {
 
         const userId = tokenData?.userId;
 
-        // 3. Fetch user's configured sources using Admin SDK (bypasses security rules securely)
+        // --- Check subscription ---
+        try {
+            const subDoc = await dbAdmin.collection('subscriptions').doc(userId).get();
+            if (subDoc.exists) {
+                const subData = subDoc.data();
+                const isActive = subData?.status === 'active';
+                const notExpired = subData?.currentPeriodEnd?.toDate() > new Date();
+
+                if (!isActive || !notExpired) {
+                    return NextResponse.json({
+                        error: 'Subscription Required',
+                        details: 'Your subscription has expired or is inactive. Please renew at primenym.com/dashboard.'
+                    }, { status: 403 });
+                }
+            }
+        } catch (err) {
+            console.error('Subscription check error:', err);
+             // Non-blocking temporarily if there are Firestore permission/setup issues
+        }
+
+        // 3. Fetch user's configured sources using Admin SDK
         const sourcesSnapshot = await dbAdmin.collection('sources')
             .where('userId', '==', userId)
             .get();
