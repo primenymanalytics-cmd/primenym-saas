@@ -4,7 +4,7 @@ import { dbAdmin } from '@/lib/firebase-admin';
 import * as admin from 'firebase-admin';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: '2025-02-24.acacia',
+    apiVersion: '2026-02-25.clover' as any,
 });
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
                         status: 'active',
                         seats,
                         connectors: ['shopify', 'woocommerce', 'linkedin'],
-                        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+                        currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
                         createdAt: admin.firestore.FieldValue.serverTimestamp(),
                         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
                     });
@@ -77,7 +77,7 @@ export async function POST(req: Request) {
                         status: subscription.status === 'active' ? 'active' : 'expired',
                         billing: isYearly ? 'yearly' : 'monthly',
                         seats,
-                        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+                        currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
                         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
                     });
 
