@@ -19,8 +19,17 @@ export const connectors: Connector[] = [
         price: "$15/mo",
         features: ["Orders", "Products", "Customers", "Inventory Levels"],
         icon: "🛍️",
-        metrics: ["Total Sales", "Net Sales", "Orders Count", "Average Order Value", "Refund Amount"],
-        dimensions: ["Date", "Product Name", "SKU", "Customer City", "Traffic Source"]
+        metrics: [
+            "Gross Sales", "Net Sales", "Total Revenue", "Discounts", "Refunds", "COGS", "Gross Profit", "Gross Margin %",
+            "Total Orders", "AOV", "Items per Order", "Total Units Sold", "Customer Count", "CLV",
+            "Shipping Amount", "Tax Amount", "Total Tips", "Inventory Quantity"
+        ],
+        dimensions: [
+            "Order ID/Name", "Financial Status", "Fulfillment Status", "Sales Channel", "Payment Gateway", "Order Tags", "Currency",
+            "Product Title", "SKU", "Variant Title", "Product Type", "Vendor", "Inventory Location",
+            "Customer ID", "Customer Type", "Customer Tags", "Shipping/Billing Location",
+            "UTM Source", "UTM Medium", "UTM Campaign", "Referring Site", "Landing Page", "Discount Code"
+        ]
     },
     {
         id: "linkedin-ads",
