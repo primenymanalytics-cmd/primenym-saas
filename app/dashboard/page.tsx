@@ -6,21 +6,30 @@ import { Button } from "@/components/ui/button"
 import { Plus, Database, Link as LinkIcon, AlertCircle, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { collection, query, where, getDocs } from "firebase/firestore"
+import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 
 export default function DashboardPage() {
     const { user } = useAuth()
     const [sourceCount, setSourceCount] = useState<number | null>(null)
     const [loading, setLoading] = useState(true)
+    const [subscription, setSubscription] = useState<any>(null)
 
     useEffect(() => {
         async function fetchStats() {
             if (!user || !db) return;
             try {
+                // Fetch active sources
                 const q = query(collection(db, "sources"), where("userId", "==", user.uid));
                 const querySnapshot = await getDocs(q);
                 setSourceCount(querySnapshot.size);
+
+                // Fetch subscription
+                const subRef = doc(db, "subscriptions", user.uid);
+                const subSnap = await getDoc(subRef);
+                if (subSnap.exists()) {
+                    setSubscription(subSnap.data());
+                }
             } catch (err) {
                 console.error("Error fetching stats:", err);
                 setSourceCount(0);
@@ -72,8 +81,25 @@ export default function DashboardPage() {
                         <AlertCircle className="h-4 w-4 text-yellow-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-500">Free Tier</div>
-                        <p className="text-xs text-muted-foreground mt-1">Upgrade to unlock connectors</p>
+                        {loading ? (
+                            <div className="flex h-10 items-center">
+                                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                            </div>
+                        ) : subscription?.status === 'active' ? (
+                            <>
+                                <div className="text-2xl font-bold text-green-600 dark:text-green-500">
+                                    Active ({subscription.seats} Seats)
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    Seats available: <span className="font-medium text-foreground">{Math.max(0, subscription.seats - (sourceCount || 0))}</span> left
+                                </p>
+                            </>
+                        ) : (
+                            <>
+                                <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-500">Free Tier</div>
+                                <p className="text-xs text-muted-foreground mt-1">Upgrade to unlock connectors</p>
+                            </>
+                        )}
                     </CardContent>
                 </Card>
             </div>

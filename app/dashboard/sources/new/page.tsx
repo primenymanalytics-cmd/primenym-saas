@@ -8,8 +8,10 @@ import { Label } from "@/components/ui/label"
 import { ArrowLeft, Loader2, Link as LinkIcon, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { connectors } from "@/lib/connectors"
+import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore"
+import { db } from "@/lib/firebase"
 
 export default function NewSourcePage() {
     const { user } = useAuth()
@@ -19,6 +21,34 @@ export default function NewSourcePage() {
     const [selectedConnector, setSelectedConnector] = useState<string | null>(null)
     const [shopUrl, setShopUrl] = useState("")
     const [error, setError] = useState("")
+    const [sourceCount, setSourceCount] = useState<number>(0)
+    const [subscription, setSubscription] = useState<any>(null)
+    const [loadingStats, setLoadingStats] = useState(true)
+
+    useEffect(() => {
+        async function fetchStats() {
+            if (!user || !db) return;
+            try {
+                // Fetch active sources
+                const q = query(collection(db, "sources"), where("userId", "==", user.uid));
+                const querySnapshot = await getDocs(q);
+                setSourceCount(querySnapshot.size);
+
+                // Fetch subscription
+                const subRef = doc(db, "subscriptions", user.uid);
+                const subSnap = await getDoc(subRef);
+                if (subSnap.exists()) {
+                    setSubscription(subSnap.data());
+                }
+            } catch (err) {
+                console.error("Error fetching stats:", err);
+            } finally {
+                setLoadingStats(false);
+            }
+        }
+
+        if (user) fetchStats()
+    }, [user])
 
     const handleOAuthConnect = async (connectorId: string, connectorName: string) => {
         if (!user) {
@@ -27,6 +57,16 @@ export default function NewSourcePage() {
         }
 
         setError("");
+
+        // Sub/Seat Validation
+        const isActive = subscription?.status === 'active';
+        const totalSeats = subscription?.seats || 0;
+        const availableSeats = isActive ? Math.max(0, totalSeats - sourceCount) : 0;
+
+        if (availableSeats <= 0) {
+            setError("You have reached your seat limit. Please go to the pricing page to upgrade your subscription or delete an existing source to free up a seat.");
+            return;
+        }
 
         if (connectorId === "linkedin-ads") {
             const authUrl = `/api/connect/linkedin/authorize?userId=${user.uid}`;
@@ -68,17 +108,24 @@ export default function NewSourcePage() {
 
     return (
         <div className="max-w-5xl mx-auto space-y-6">
-            <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" asChild className="rounded-full">
-                    <Link href="/dashboard/sources">
-                        <ArrowLeft className="h-5 w-5" />
-                        <span className="sr-only">Back to sources</span>
-                    </Link>
-                </Button>
-                <div>
-                    <h1 className="text-2xl font-bold tracking-tight">Add New Data Source</h1>
-                    <p className="text-sm text-muted-foreground">Select a platform below to connect via secure OAuth.</p>
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div className="flex items-center gap-4">
+                    <Button variant="ghost" size="icon" asChild className="rounded-full shrink-0">
+                        <Link href="/dashboard/sources">
+                            <ArrowLeft className="h-5 w-5" />
+                            <span className="sr-only">Back to sources</span>
+                        </Link>
+                    </Button>
+                    <div>
+                        <h1 className="text-2xl font-bold tracking-tight">Add New Data Source</h1>
+                        <p className="text-sm text-muted-foreground">Select a platform below to connect via secure OAuth.</p>
+                    </div>
                 </div>
+                {!loadingStats && subscription?.status === 'active' && (
+                    <div className="bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-300 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap">
+                        Seats Available: {Math.max(0, subscription.seats - sourceCount)} / {subscription.seats}
+                    </div>
+                )}
             </div>
 
             {error && (
