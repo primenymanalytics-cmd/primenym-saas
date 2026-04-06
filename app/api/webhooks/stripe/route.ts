@@ -54,7 +54,9 @@ export async function POST(req: Request) {
                         status: 'active',
                         seats,
                         connectors: ['shopify', 'woocommerce', 'linkedin'],
-                        currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
+                        currentPeriodEnd: (subscription as any).current_period_end 
+                            ? admin.firestore.Timestamp.fromMillis((subscription as any).current_period_end * 1000) 
+                            : admin.firestore.FieldValue.serverTimestamp(),
                         createdAt: admin.firestore.FieldValue.serverTimestamp(),
                         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
                     });
@@ -73,13 +75,15 @@ export async function POST(req: Request) {
                     const seats = item?.quantity || 1;
                     const isYearly = item?.price?.recurring?.interval === 'year';
 
-                    await dbAdmin.collection('subscriptions').doc(userId).update({
+                    await dbAdmin.collection('subscriptions').doc(userId).set({
                         status: subscription.status === 'active' ? 'active' : 'expired',
                         billing: isYearly ? 'yearly' : 'monthly',
                         seats,
-                        currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
+                        currentPeriodEnd: (subscription as any).current_period_end 
+                            ? admin.firestore.Timestamp.fromMillis((subscription as any).current_period_end * 1000) 
+                            : admin.firestore.FieldValue.serverTimestamp(),
                         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-                    });
+                    }, { merge: true });
 
                     console.log(`Subscription updated for user ${userId}`);
                 }
@@ -91,10 +95,10 @@ export async function POST(req: Request) {
                 const userId = subscription.metadata?.userId;
 
                 if (userId) {
-                    await dbAdmin.collection('subscriptions').doc(userId).update({
+                    await dbAdmin.collection('subscriptions').doc(userId).set({
                         status: 'expired',
                         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-                    });
+                    }, { merge: true });
 
                     console.log(`Subscription cancelled for user ${userId}`);
                 }
