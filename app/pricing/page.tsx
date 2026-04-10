@@ -4,9 +4,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Minus, Plus, Zap, Shield, BarChart3, Headphones, Cloud, Globe, Loader2 } from "lucide-react"
 import Link from "next/link"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { useRouter } from "next/navigation"
+import { doc, getDoc } from "firebase/firestore"
+import { db } from "@/lib/firebase"
 
 export default function PricingPage() {
     const { user } = useAuth()
@@ -14,6 +16,55 @@ export default function PricingPage() {
     const [isYearly, setIsYearly] = useState(false)
     const [seats, setSeats] = useState(1)
     const [isLoading, setIsLoading] = useState(false)
+    const [activeSub, setActiveSub] = useState<any>(null)
+    const [loadingSub, setLoadingSub] = useState(true)
+
+    useEffect(() => {
+        async function fetchSub() {
+            if (!user || !db) {
+                setLoadingSub(false);
+                return;
+            }
+            try {
+                const docRef = doc(db, 'subscriptions', user.uid);
+                const snap = await getDoc(docRef);
+                if (snap.exists()) {
+                    const data = snap.data();
+                    if (data.status === 'active') {
+                        setActiveSub(data);
+                    }
+                }
+            } catch (err) {
+                console.error("Error fetching sub:", err);
+            } finally {
+                setLoadingSub(false);
+            }
+        }
+        fetchSub();
+    }, [user])
+
+    const handleManageSubscription = async () => {
+        setIsLoading(true)
+        try {
+            const res = await fetch('/api/stripe/create-portal', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: user?.uid })
+            })
+
+            const data = await res.json()
+            if (data.url) {
+                window.location.href = data.url
+            } else {
+                alert(data.error || 'Failed to open customer portal')
+            }
+        } catch (err) {
+            console.error('Portal error:', err)
+            alert('Something went wrong. Please try again.')
+        } finally {
+            setIsLoading(false)
+        }
+    }
 
     const handleSubscribe = async () => {
         if (!user) {
@@ -127,41 +178,71 @@ export default function PricingPage() {
                 </CardHeader>
 
                 <CardContent className="px-8 pb-4">
-                    {/* Seat Selector */}
-                    <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-900 border rounded-xl p-4 mb-8">
-                        <div>
-                            <p className="text-sm font-semibold">Number of seats</p>
-                            <p className="text-xs text-muted-foreground">Each seat = 1 user account</p>
+                    {loadingSub ? (
+                        <div className="flex h-32 items-center justify-center">
+                            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                         </div>
-                        <div className="flex items-center gap-3">
-                            <button
-                                onClick={() => setSeats(Math.max(1, seats - 1))}
-                                className="w-8 h-8 rounded-lg border flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-30"
-                                disabled={seats <= 1}
-                                aria-label="Decrease seats"
+                    ) : activeSub ? (
+                        <div className="bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900 rounded-xl p-6 mb-8 text-center">
+                            <Zap className="h-8 w-8 text-indigo-500 mx-auto mb-3" />
+                            <h3 className="text-lg font-bold text-indigo-900 dark:text-indigo-100 mb-1">Active Subscription Found</h3>
+                            <p className="text-sm text-indigo-700 dark:text-indigo-300 mb-6">
+                                You are currently using {activeSub.seats} seat{activeSub.seats > 1 ? 's' : ''} on the {activeSub.billing} plan.
+                            </p>
+                            <Button
+                                onClick={handleManageSubscription}
+                                disabled={isLoading}
+                                className="w-full bg-indigo-600 hover:bg-indigo-700"
                             >
-                                <Minus className="w-4 h-4" />
-                            </button>
-                            <span className="text-xl font-bold w-8 text-center">{seats}</span>
-                            <button
-                                onClick={() => setSeats(seats + 1)}
-                                className="w-8 h-8 rounded-lg border flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                                aria-label="Increase seats"
-                            >
-                                <Plus className="w-4 h-4" />
-                            </button>
+                                {isLoading ? (
+                                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Redirecting...</>
+                                ) : (
+                                    'Manage Subscription/Seats'
+                                )}
+                            </Button>
+                            <p className="text-xs text-muted-foreground mt-4">
+                                You will be seamlessly redirected to Stripe's Customer Portal where you can add or remove seats. Prorated charges will be applied automatically!
+                            </p>
                         </div>
-                    </div>
+                    ) : (
+                        <>
+                            {/* Seat Selector */}
+                            <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-900 border rounded-xl p-4 mb-8">
+                                <div>
+                                    <p className="text-sm font-semibold">Number of seats</p>
+                                    <p className="text-xs text-muted-foreground">Each seat = 1 user account</p>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <button
+                                        onClick={() => setSeats(Math.max(1, seats - 1))}
+                                        className="w-8 h-8 rounded-lg border flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-30"
+                                        disabled={seats <= 1}
+                                        aria-label="Decrease seats"
+                                    >
+                                        <Minus className="w-4 h-4" />
+                                    </button>
+                                    <span className="text-xl font-bold w-8 text-center">{seats}</span>
+                                    <button
+                                        onClick={() => setSeats(seats + 1)}
+                                        className="w-8 h-8 rounded-lg border flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                                        aria-label="Increase seats"
+                                    >
+                                        <Plus className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            </div>
 
-                    {/* Total */}
-                    <div className="flex items-center justify-between border-b pb-6 mb-6">
-                        <span className="text-sm text-muted-foreground">
-                            {seats} seat{seats > 1 ? 's' : ''} × ${isYearly ? monthlyEquivalent : monthlyPrice.toFixed(2)}/mo
-                        </span>
-                        <div className="text-right">
-                            <p className="text-2xl font-bold">${totalPrice}<span className="text-sm font-normal text-muted-foreground">/{isYearly ? 'yr' : 'mo'}</span></p>
-                        </div>
-                    </div>
+                            {/* Total */}
+                            <div className="flex items-center justify-between border-b pb-6 mb-6">
+                                <span className="text-sm text-muted-foreground">
+                                    {seats} seat{seats > 1 ? 's' : ''} × ${isYearly ? monthlyEquivalent : monthlyPrice.toFixed(2)}/mo
+                                </span>
+                                <div className="text-right">
+                                    <p className="text-2xl font-bold">${totalPrice}<span className="text-sm font-normal text-muted-foreground">/{isYearly ? 'yr' : 'mo'}</span></p>
+                                </div>
+                            </div>
+                        </>
+                    )}
 
                     {/* Features */}
                     <ul className="space-y-4">
@@ -176,19 +257,21 @@ export default function PricingPage() {
                     </ul>
                 </CardContent>
 
-                <CardFooter className="px-8 pb-10 pt-6">
-                    <Button
-                        onClick={handleSubscribe}
-                        disabled={isLoading}
-                        className="w-full h-12 text-base font-semibold bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/25 transition-all hover:shadow-xl hover:shadow-indigo-500/30"
-                    >
-                        {isLoading ? (
-                            <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Redirecting to checkout...</>
-                        ) : (
-                            'Subscribe Now'
-                        )}
-                    </Button>
-                </CardFooter>
+                {!activeSub && (
+                    <CardFooter className="px-8 pb-10 pt-6">
+                        <Button
+                            onClick={handleSubscribe}
+                            disabled={isLoading || loadingSub}
+                            className="w-full h-12 text-base font-semibold bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/25 transition-all hover:shadow-xl hover:shadow-indigo-500/30"
+                        >
+                            {isLoading ? (
+                                <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Redirecting to checkout...</>
+                            ) : (
+                                'Subscribe Now'
+                            )}
+                        </Button>
+                    </CardFooter>
+                )}
             </Card>
 
             {/* Trust Section */}
