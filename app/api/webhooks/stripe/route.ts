@@ -68,7 +68,14 @@ export async function POST(req: Request) {
 
             case 'customer.subscription.updated': {
                 const subscription = event.data.object as Stripe.Subscription;
-                const userId = subscription.metadata?.userId;
+                let userId = subscription.metadata?.userId;
+
+                if (!userId) {
+                    const snap = await dbAdmin.collection('subscriptions').where('stripeSubscriptionId', '==', subscription.id).limit(1).get();
+                    if (!snap.empty) {
+                        userId = snap.docs[0].id;
+                    }
+                }
 
                 if (userId) {
                     const item = subscription.items.data[0];
@@ -92,7 +99,14 @@ export async function POST(req: Request) {
 
             case 'customer.subscription.deleted': {
                 const subscription = event.data.object as Stripe.Subscription;
-                const userId = subscription.metadata?.userId;
+                let userId = subscription.metadata?.userId;
+
+                if (!userId) {
+                    const snap = await dbAdmin.collection('subscriptions').where('stripeSubscriptionId', '==', subscription.id).limit(1).get();
+                    if (!snap.empty) {
+                        userId = snap.docs[0].id;
+                    }
+                }
 
                 if (userId) {
                     await dbAdmin.collection('subscriptions').doc(userId).set({
